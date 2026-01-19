@@ -56,6 +56,34 @@ from core import *  # noqa: F401,F403
 # Streamlit UI (`streamlit_app.py`). If you need the API back, see
 # version history or recreate endpoints using the helpers in `core.py`.
 
+# Initialize FastAPI app
+app = FastAPI(title="StudyRAG Local API")
+
+# Initialize LLM
+llm = ChatOllama(model=LLM_MODEL, base_url=OLLAMA_BASE_URL)
+
+
+@app.post("/upload")
+async def upload_files(files: List[UploadFile] = File(...), note_id: Optional[str] = Form(None)):
+    """Upload and process documents for RAG."""
+    try:
+        raw_docs = []
+        for f in files:
+            content = await f.read()
+            text = ""
+            
+            if f.filename.lower().endswith(".pdf"):
+                pdf = PdfReader(io.BytesIO(content))
+                text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+            elif f.filename.lower().endswith(".docx"):
+                doc = DocxDocument(io.BytesIO(content))
+                text = "\n".join(p.text for p in doc.paragraphs)
+            elif f.filename.lower().endswith(".txt"):
+                text = content.decode("utf-8", errors="ignore")
+            
+            if text.strip():
+                raw_docs.append(Document(page_content=text, metadata={"source": f.filename}))
+        
         if not raw_docs:
             return JSONResponse(
                 {"ok": False, "message": "No extractable text. If PDF is scanned, you need OCR."},
@@ -71,6 +99,7 @@ from core import *  # noqa: F401,F403
         return {"ok": True, "docs": len(raw_docs), "chunks": len(splits)}
     except Exception as e:
         return JSONResponse({"ok": False, "error": f"{type(e).__name__}: {e}"}, status_code=500)
+
 
 
 @app.post("/chat")
