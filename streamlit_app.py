@@ -1192,15 +1192,72 @@ def main():
     with tabs[1]:
         st.header("💬 Chat with your documents")
         
+        # Add tool toggle
+        use_tools = st.checkbox("🔧 Enable Smart Tools like Calculator", value=True)
+        
+        # Agent mode toggle
+        show_agent_process = st.checkbox("🔍 Show agent collaboration process", value=False)
+    
         question = st.text_input("Ask a question about your uploaded materials")
+            
         if st.button("🔍 Ask", type="primary"):
             if not question.strip():
                 st.warning("Enter a question")
             else:
-                with st.spinner("Thinking..."):
-                    answer = ask_question(question.strip())
-                st.success("Answer")
-                st.write(answer)
+                with st.spinner("Agents working..." if show_agent_process else "Thinking..."):
+                    if use_tools:
+                        # Use multi-agent approach with tools
+                        result = api.ask_with_agents(question.strip())
+                        answer = result["final_answer"]
+                    else:
+                        # Original version without agents
+                        answer = ask_question(question.strip())
+                        result = None
+                
+                # Show agent collaboration process if enabled AND using tools
+                if show_agent_process and use_tools and result:
+                    with st.expander("🔬 Agent Collaboration Process", expanded=True):
+                        # Researcher Agent Section
+                        st.markdown("### 🔎 Agent 1: Researcher")
+                        st.markdown("*Role: Finds and extracts relevant facts from your documents*")
+                        st.info(result["researcher_output"])
+                        
+                        st.markdown("---")
+                        
+                        # Teacher Agent Section
+                        st.markdown("### 📚 Agent 2: Teacher")
+                        st.markdown("*Role: Explains the research in a student-friendly way*")
+                        st.success(result["teacher_output"])
+                        
+                        st.markdown("---")
+                        st.markdown("**🔄 Collaboration Flow:**")
+                        st.markdown("""
+```
+                        ┌─────────────────┐         ┌─────────────────┐
+                        │   RESEARCHER    │ ──────► │    TEACHER      │
+                        │                 │         │                 │
+                        │ • Searches docs │         │ • Simplifies    │
+                        │ • Extracts facts│         │ • Adds examples │
+                        │ • Cites sources │         │ • Makes friendly│
+                        └─────────────────┘         └─────────────────┘
+```
+                        """)
+                else:
+                    # Show final answer ONLY when agent process is NOT shown
+                    st.markdown("### ✅ Final Answer")
+                    st.write(answer)
+        # question = st.text_input("Ask a question about your uploaded materials")
+        # if st.button("🔍 Ask", type="primary"):
+        #     if not question.strip():
+        #         st.warning("Enter a question")
+        #     else:
+        #         with st.spinner("Thinking..."):
+        #             if use_tools:
+        #                 answer = api.ask_with_tools(question.strip())  # Tool-enabled version
+        #             else:
+        #                 answer = ask_question(question.strip())    # Original version
+        #         st.success("Answer")
+        #         st.write(answer)
 
     # Quizzes tab
     with tabs[2]:

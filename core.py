@@ -17,7 +17,8 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_ollama import ChatOllama, OllamaEmbeddings
-
+import re
+import math
 
 # ----------------------------
 # Config (LOCAL)
@@ -164,3 +165,163 @@ def save_state(state: Dict[str, Any]) -> None:
 
 def new_id(prefix: str) -> str:
     return f"{prefix}_{int(time.time() * 1000)}"
+
+
+def calculator_tool(expression: str) -> str:
+    """
+    Safe calculator tool for basic math operations.
+    Supports: +, -, *, /, ^, sqrt, sin, cos, tan, log, pi, e
+    """
+    try:
+        # Clean and validate the expression
+        allowed_chars = set('0123456789+-*/().^ sqrtincologepi')
+        expr = expression.lower().replace(' ', '')
+        
+        if not all(c in allowed_chars for c in expr.replace('sqrt', '').replace('sin', '').replace('cos', '').replace('tan', '').replace('log', '').replace('pi', '').replace('e', '')):
+            return "Error: Invalid characters in expression"
+        
+        # Replace math symbols
+        expr = expr.replace('^', '**')
+        expr = expr.replace('sqrt', 'math.sqrt')
+        expr = expr.replace('sin', 'math.sin')
+        expr = expr.replace('cos', 'math.cos')
+        expr = expr.replace('tan', 'math.tan')
+        expr = expr.replace('log', 'math.log10')
+        expr = expr.replace('pi', str(math.pi))
+        expr = expr.replace('e', str(math.e))
+        
+        # Evaluate safely
+        result = eval(expr, {"__builtins__": {}, "math": math})
+        return f"Result: {result}"
+    except Exception as e:
+        return f"Calculation error: {str(e)}"
+
+
+def ask_with_tools(question: str, note_id: str = None) -> str:
+    """
+    Enhanced Q&A that can use tools when needed.
+    The LLM decides whether to use a tool based on the question.
+    """
+    llm = get_llm()
+    
+    # First, ask the LLM if it needs a tool
+    tool_check_prompt = f"""You are a study assistant with access to tools.
+
+Available tools:
+1. CALCULATOR - For math calculations. Use format: [CALC: expression]
+   Example: [CALC: 25 * 4 + 10] or [CALC: sqrt(144)]
+
+Question: {question}
+
+If this question requires a calculation, respond ONLY with the calculator call like [CALC: expression].
+If no calculation is needed, respond with: NO_TOOL_NEEDED"""
+
+    tool_response = llm.invoke(tool_check_prompt).content.strip()
+    
+    # Check if LLM wants to use calculator
+    calc_match = re.search(r'\[CALC:\s*([^\]]+)\]', tool_response)
+    
+    tool_result = None
+    if calc_match:
+        expression = calc_match.group(1)
+        tool_result = calculator_tool(expression)
+    
+    # Now generate final answer
+    ctx = build_context(question, note_id=note_id)
+    
+    if tool_result:
+        final_prompt = f"""You are "My Learning Buddy" — a friendly study helper.
+
+You used the calculator tool and got: {tool_result}
+
+Context from notes:
+{ctx}
+
+Question: {question}
+
+Provide a helpful answer incorporating the calculation result. Explain the math if relevant."""
+    else:
+        final_prompt = f"""You are "My Learning Buddy" — a friendly study helper.
+
+Context from notes:
+{ctx}
+
+Question: {question}
+
+Answer based on the context above."""
+
+    return llm.invoke(final_prompt).content
+
+
+def researcher_agent(question: str, note_id: str = None) -> str:
+    """
+    Agent 1: Researcher - Finds and extracts relevant information.
+    Returns raw facts without explanation.
+    """
+    llm = get_llm()
+    ctx = build_context(question, note_id=note_id)
+    
+    if not ctx or not ctx.strip():
+        return "No relevant information found in the uploaded documents."
+    
+    prompt = f"""You are a RESEARCHER agent. Your job is to:
+1. Find relevant facts from the provided context
+2. Extract key information that answers the question
+3. List facts as bullet points - be precise and factual
+4. Include source references [1], [2], etc.
+
+DO NOT explain or teach. Just extract the raw facts.
+
+CONTEXT:
+{ctx}
+
+QUESTION: {question}
+
+EXTRACTED FACTS:"""
+    
+    return llm.invoke(prompt).content
+
+
+def teacher_agent(question: str, research_facts: str) -> str:
+    """
+    Agent 2: Teacher - Takes research and explains it clearly.
+    Makes content student-friendly and engaging.
+    """
+    llm = get_llm()
+    
+    prompt = f"""You are a TEACHER agent named "My Learning Buddy". Your job is to:
+1. Take the research facts provided below
+2. Explain them in a friendly, easy-to-understand way
+3. Add helpful examples or analogies if useful
+4. Use encouraging language suitable for students
+5. Structure the answer clearly
+
+DO NOT add new facts - only explain what the Researcher found.
+If the research says "no information found", kindly tell the student to upload relevant materials.
+
+RESEARCH FACTS:
+{research_facts}
+
+STUDENT'S QUESTION: {question}
+
+YOUR FRIENDLY EXPLANATION:"""
+    
+    return llm.invoke(prompt).content
+
+
+def ask_with_agents(question: str, note_id: str = None) -> dict:
+    """
+    Multi-agent Q&A: Researcher finds info, Teacher explains it.
+    Returns both intermediate and final results for transparency.
+    """
+    # Agent 1: Research
+    research_output = researcher_agent(question, note_id)
+    
+    # Agent 2: Teach
+    teacher_output = teacher_agent(question, research_output)
+    
+    return {
+        "researcher_output": research_output,
+        "teacher_output": teacher_output,
+        "final_answer": teacher_output
+    }
