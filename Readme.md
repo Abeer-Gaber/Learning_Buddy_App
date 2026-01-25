@@ -42,10 +42,10 @@ Keep this running in a separate terminal window.
 
 ```bash
 # Download the LLM model (required)
-ollama pull llama3.2:latest
+ollama pull mistral
 
 # Download the embedding model (recommended for better performance)
-ollama pull nomic-embed-text
+ollama pull mxbai-embed-large
 ```
 
 **Verify models are installed:**
@@ -53,7 +53,7 @@ ollama pull nomic-embed-text
 ollama list
 ```
 
-You should see both `llama3.2:latest` and `nomic-embed-text:latest` in the list.
+You should see both `mistral` and `mxbai-embed-large` in the list.
 
 ### Step 4: Clone or Download This Repository
 
@@ -97,16 +97,16 @@ ollama list
 Open `core.py` and verify these lines match your installed models:
 
 ```python
-LLM_MODEL = "llama3.2:latest"  # Must match: ollama list
-EMBED_MODEL = "nomic-embed-text:latest"  # Must match: ollama list
+LLM_MODEL = "mistral"  # Must match: ollama list
+EMBED_MODEL = "mxbai-embed-large"  # Must match: ollama list
 ```
 
 #### Update `app.py`:
 Open `app.py` and verify these lines match your installed models:
 
 ```python
-LLM_MODEL = "llama3.2:latest"  # Must match: ollama list
-EMBED_MODEL = "nomic-embed-text:latest"  # Must match: ollama list
+LLM_MODEL = "mistral"  # Must match: ollama list
+EMBED_MODEL = "mxbai-embed-large"  # Must match: ollama list
 ```
 
 **Common model tags:**
@@ -184,7 +184,7 @@ ollama list
 
 # Pull the required models
 ollama pull mistral
-ollama pull nomic-embed-text:latest
+ollama pull mxbai-embed-large
 
 # Update core.py and app.py to match the exact model tags from 'ollama list'
 ```
@@ -277,8 +277,8 @@ Edit `core.py` to change models:
 ```python
 # LLM Configuration
 OLLAMA_BASE_URL = "http://127.0.0.1:11434"
-LLM_MODEL = "llama3.2:latest"          # Change to your preferred LLM
-EMBED_MODEL = "nomic-embed-text:latest" # Change to your preferred embeddings
+LLM_MODEL = "mistral"          # Change to your preferred LLM
+EMBED_MODEL = "mxbai-embed-large" # Change to your preferred embeddings
 
 # Vector Store Configuration
 PERSIST_DIR = "./chroma_db"
