@@ -183,7 +183,7 @@ pip install langchain-ollama
 ollama list
 
 # Pull the required models
-ollama pull llama3.2:latest
+ollama pull mistral
 ollama pull nomic-embed-text:latest
 
 # Update core.py and app.py to match the exact model tags from 'ollama list'
@@ -308,10 +308,10 @@ Some popular models you can use:
 To switch models:
 ```bash
 # Pull the new model
-ollama pull mistral:latest
+ollama pull mistral
 
 # Update core.py and app.py
-LLM_MODEL = "mistral:latest"
+LLM_MODEL = "mistral"
 
 # Delete old database if changing embedding model
 rm -rf ./chroma_db
