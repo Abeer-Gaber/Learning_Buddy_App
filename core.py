@@ -23,10 +23,10 @@ from langchain_ollama import ChatOllama, OllamaEmbeddings
 # Config (LOCAL)
 # ----------------------------
 OLLAMA_BASE_URL = "http://127.0.0.1:11434"
-LLM_MODEL = "llama3.2:1b"
+LLM_MODEL = "mistral"  # Changed from llama3.2:1b for better JSON output
 # Use the exact tag shown by `ollama list` for the embeddings model
 # (e.g. `nomic-embed-text:latest`) to avoid "model not found" errors.
-EMBED_MODEL = "nomic-embed-text:latest"
+EMBED_MODEL = "mxbai-embed-large"  # Better quality embeddings (free via Ollama)
 
 PERSIST_DIR = "./chroma_db"
 COLLECTION = "study_rag"

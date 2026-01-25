@@ -1,4 +1,26 @@
 {
-  "notes": {},
-  "chats": {}
+  "notes": {
+    "note_1769133907076": {
+      "title": "llm1"
+    }
+  },
+  "chats": {
+    "note_1769133907076": [
+      {
+        "question": "Hi what is ur name",
+        "answer": "I don't see that in your notes",
+        "ts": 1769133952
+      },
+      {
+        "question": "what is RAG",
+        "answer": "Did you mean \"Generative\" or \"Multimodal\" from context?",
+        "ts": 1769133978
+      },
+      {
+        "question": "what should i do before interview",
+        "answer": "Before an interview, it's generally recommended to review and practice responding to common interview questions. Based on the provided context, I couldn't find information about \"interview preparation\" or \"practice answering interview questions.\"\n\nHowever, if you'd like some general advice on how to prepare for an interview, here are a few tips:\n\n* Review the company's website and job description to understand their requirements and expectations.\n* Research the industry and relevant topics to demonstrate your knowledge and interest.\n* Prepare answers to common interview questions, such as \"Why do you want to work for this company?\" or \"What are your strengths and weaknesses?\"\n* Practice responding to behavioral interview questions using the STAR method ( Situation, Task, Action, Result).\n\nRemember that these tips are not specific to the context provided, and I couldn't find any information on language models or AI in the context of job interviews. If you have any further questions or would like more general advice, feel free to ask!",
+        "ts": 1769143363
+      }
+    ]
+  }
 }
