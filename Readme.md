@@ -333,3 +333,44 @@ rm -rf ./data
 # Restart the app
 streamlit run streamlit_app.py
 ```
+
+## Risks and Mitigations
+
+### 1. Hallucination Risk
+**Risk**: LLM may generate plausible-sounding but incorrect information.
+**Mitigation**: 
+- RAG grounds responses in uploaded documents
+- Strict prompting: "Answer ONLY from context"
+- Citations allow users to verify sources
+- "Not found" response when context lacks information
+
+### 2. Harmful Advice Risk
+**Risk**: Users may ask for medical, legal, or dangerous information.
+**Mitigation**:
+- Safety filter checks questions before processing
+- Explicit refusal prompts for sensitive topics
+- Visible disclaimer about limitations
+- Redirect to appropriate professionals
+
+### 3. Bias Risk
+**Risk**: Model may reflect biases from training data or uploaded materials.
+**Mitigation**:
+- Grounding to user documents limits parametric bias
+- Encourage diverse, authoritative source materials
+- Teacher agent uses neutral, educational tone
+
+### 4. Privacy Risk
+**Risk**: User documents may contain sensitive information.
+**Mitigation**:
+- All processing happens locally (Ollama)
+- No data sent to external APIs
+- Vector store can be cleared between sessions
+- No permanent logging of queries
+
+### 5. Over-Reliance Risk
+**Risk**: Students may depend too heavily on AI instead of learning.
+**Mitigation**:
+- Designed as study AID, not replacement
+- Quizzes test understanding (not just provide answers)
+- Encourages active learning through flashcards
+- Clear disclaimer about verification

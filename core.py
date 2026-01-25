@@ -325,3 +325,79 @@ def ask_with_agents(question: str, note_id: str = None) -> dict:
         "teacher_output": teacher_output,
         "final_answer": teacher_output
     }
+    
+    
+SAFETY_RULES = {
+    "refuse_topics": [
+        "medical diagnosis",
+        "medication dosage",
+        "legal advice",
+        "financial investment",
+        "self-harm",
+        "violence",
+        "cheating",
+        "plagiarism",
+        "hacking",
+        "illegal activities"
+    ],
+    "caution_topics": [
+        "mental health",
+        "controversial history",
+        "political opinions",
+        "religious beliefs"
+    ]
+}
+
+SAFETY_PROMPT_ADDITION = """
+SAFETY RULES - You MUST follow these:
+1. NEVER provide medical, legal, or financial advice
+2. NEVER help with cheating, plagiarism, or academic dishonesty
+3. NEVER provide information that could cause harm
+4. If asked about sensitive topics, suggest consulting appropriate professionals
+5. If unsure, err on the side of caution
+
+If the question violates these rules, politely decline and explain why.
+"""
+
+def check_safety(question: str) -> dict:
+    """Check if question triggers safety rules."""
+    question_lower = question.lower()
+    
+    for topic in SAFETY_RULES["refuse_topics"]:
+        if topic in question_lower:
+            return {
+                "safe": False,
+                "action": "refuse",
+                "reason": f"This question appears to be about {topic}, which I cannot help with."
+            }
+    
+    for topic in SAFETY_RULES["caution_topics"]:
+        if topic in question_lower:
+            return {
+                "safe": True,
+                "action": "caution",
+                "reason": f"This topic ({topic}) requires careful handling."
+            }
+    
+    return {"safe": True, "action": "proceed", "reason": None}
+
+
+def ask_with_safety(question: str, note_id: str = None) -> dict:
+    """Q&A with safety checks."""
+    
+    # Check safety first
+    safety_check = check_safety(question)
+    
+    if safety_check["action"] == "refuse":
+        return {
+            "answer": f"I'm sorry, but I can't help with that. {safety_check['reason']} Please consult an appropriate professional for this type of question.",
+            "safety_triggered": True
+        }
+    
+    # Proceed with normal flow
+    result = ask_with_agents(question, note_id)
+    result["safety_triggered"] = False
+    
+    return result
+
+
